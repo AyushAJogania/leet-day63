@@ -1,0 +1,71 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+struct Point {
+    int x, y;
+    Point(int _x, int _y) : x(_x), y(_y) {}
+};
+
+struct Edge {
+    int u, v, weight;
+    Edge(int _u, int _v, int _weight) : u(_u), v(_v), weight(_weight) {}
+};
+
+class Solution {
+public:
+    int minCostConnectPoints(std::vector<std::vector<int>>& points) {
+        int n = points.size();
+        std::vector<Edge> edges;
+        
+        // Create edges and calculate Manhattan distances
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                int dist = std::abs(points[i][0] - points[j][0]) + std::abs(points[i][1] - points[j][1]);
+                edges.emplace_back(i, j, dist);
+            }
+        }
+        
+        // Sort edges by weight in ascending order
+        std::sort(edges.begin(), edges.end(), [](const Edge& a, const Edge& b) {
+            return a.weight < b.weight;
+        });
+        
+        std::vector<int> parent(n);
+        std::iota(parent.begin(), parent.end(), 0); // Initialize each node as its own parent
+        
+        int minCost = 0;
+        int edgesAdded = 0;
+        
+        for (const Edge& edge : edges) {
+            if (unionSets(parent, edge.u, edge.v)) {
+                minCost += edge.weight;
+                ++edgesAdded;
+                
+                if (edgesAdded == n - 1) {
+                    break; // MST is complete
+                }
+            }
+        }
+        
+        return minCost;
+    }
+    
+private:
+    int findSet(std::vector<int>& parent, int u) {
+        if (parent[u] == u) {
+            return u;
+        }
+        return parent[u] = findSet(parent, parent[u]);
+    }
+    
+    bool unionSets(std::vector<int>& parent, int u, int v) {
+        u = findSet(parent, u);
+        v = findSet(parent, v);
+        if (u != v) {
+            parent[v] = u;
+            return true;
+        }
+        return false;
+    }
+};
